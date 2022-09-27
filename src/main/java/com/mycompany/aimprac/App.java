@@ -31,17 +31,18 @@ public class App extends Application {
     private int canvasHeight = 720;
     private String mode = "close_dots";
     private double dotRadius = 24;
-    private long dotVisibilityMillis = 800;
+    private long dotVisibilityMillis = 1200;
     private int multiDotCount = 2;
     private long addDotDelayMillis = 200;
     private int addDots = 50;
+    private boolean playSounds = true;
 
     @Override
     public void start(Stage stage) {
         BorderPane rootPane = new BorderPane();
         rootPane.setBackground(new Background(new BackgroundFill(Color.rgb(50, 50, 60), CornerRadii.EMPTY, Insets.EMPTY)));
 
-        AimCanvas canvas = new AimCanvas(canvasWidth, canvasHeight, mode, dotRadius, addDots, dotVisibilityMillis, multiDotCount, addDotDelayMillis);
+        AimCanvas canvas = new AimCanvas(canvasWidth, canvasHeight, mode, dotRadius, addDots, dotVisibilityMillis, multiDotCount, addDotDelayMillis, playSounds);
         canvas.start();
 
         Button resetButton = new Button("Restart");
@@ -168,6 +169,11 @@ public class App extends Application {
         heightSelection.getItems().add("1440");
         heightSelection.setValue(canvasHeight);
         
+        CheckBox playSounds = new CheckBox("Play sounds");
+        playSounds.setPadding(configMenuItemInsets);
+        playSounds.setTextFill(Color.WHITE);
+        playSounds.setSelected(this.playSounds);
+        
         widthSelection.valueProperty().addListener((event) -> {
             initStageSizeFromSelections(stage, canvas, widthSelection, heightSelection);
         });
@@ -187,6 +193,10 @@ public class App extends Application {
         });
         initStageSizeFromSelections(stage, canvas, widthSelection, heightSelection);
         initStageResizeListeners(stage, canvas);
+        
+        playSounds.selectedProperty().addListener((event) -> {
+            canvas.setPlaySounds(playSounds.isSelected());
+        });
 
         VBox configurationMenu = new VBox();
         configurationMenu.setPadding(configMenuInsets);
@@ -204,6 +214,7 @@ public class App extends Application {
                 visibilityTimeSlider,
                 addDotDelayLabel,
                 addDotDelaySlider,
+                playSounds,
                 customSize,
                 widthSelectionLabel,
                 widthSelection,

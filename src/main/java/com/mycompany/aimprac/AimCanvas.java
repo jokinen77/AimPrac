@@ -5,6 +5,8 @@
  */
 package com.mycompany.aimprac;
 
+import java.io.BufferedInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Random;
 import javafx.geometry.Insets;
@@ -20,12 +22,19 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author jokin
  */
 public class AimCanvas {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(AimCanvas.class);
     
     private double canvasWidth;
     private double canvasHeight;
@@ -37,6 +46,7 @@ public class AimCanvas {
     private Canvas canvas;
     private GraphicsContext gc;
     private boolean started = false;
+    private boolean playSounds;
     
     
     private Random rand;
@@ -56,7 +66,7 @@ public class AimCanvas {
 
     private AimCanvasTimer timer;
 
-    public AimCanvas(double canvasWidth, double canvasHeight, String mode, double dotRadius, int addDots, long dotVisibilityMillis, int multiDotCount, long addDotDelayMillis) {
+    public AimCanvas(double canvasWidth, double canvasHeight, String mode, double dotRadius, int addDots, long dotVisibilityMillis, int multiDotCount, long addDotDelayMillis, boolean playSounds) {
         this.rootPane = new AnchorPane();
         this.mode = mode;
         this.dotRadius = dotRadius;
@@ -64,6 +74,7 @@ public class AimCanvas {
         this.dotVisibilityMillis = dotVisibilityMillis;
         this.multiDotCount = multiDotCount;
         this.addDotDelayMillis = addDotDelayMillis;
+        this.playSounds = playSounds;
         this.setWidth(canvasWidth);
         this.setHeight(canvasHeight);
     }
@@ -233,12 +244,14 @@ public class AimCanvas {
     public void hit(double x, double y) {
         for (Dot dot : dots) {
             if (dot.hit(x, y)) {
+                playSound("switch-17.wav");
                 this.lastHitHitted = true;
                 break;
             }
             this.lastHitHitted = false;
         }
         if (!lastHitHitted) {
+            playSound("beep-08b.wav");
             this.missedShotCount++;
         }
         this.lastHitX = x;
@@ -346,6 +359,11 @@ public class AimCanvas {
         this.reset();
     }
 
+    public void setPlaySounds(boolean playSounds) {
+        this.playSounds = playSounds;
+        this.reset();
+    }
+
     private void showResults() {
         VBox resultBox = new VBox();
         resultBox.setLayoutX(this.rootWidth / 2 - 100);
@@ -381,5 +399,16 @@ public class AimCanvas {
         
         resultBox.getChildren().addAll(hitted, timeouts, missed, resetButton);
         this.rootPane.getChildren().add(resultBox);
+    }
+    
+    private void playSound(String filename) {
+        if (!this.playSounds) return;
+        try (InputStream inputStream = new BufferedInputStream(getClass().getResourceAsStream("/sounds/" + filename));  AudioInputStream audioStream = AudioSystem.getAudioInputStream(inputStream)) {
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioStream);
+            clip.start();
+        } catch (Exception e) {
+            LOG.error("Cannot play sound!", e);
+        }
     }
 }

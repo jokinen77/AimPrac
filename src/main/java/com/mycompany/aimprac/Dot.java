@@ -7,12 +7,16 @@ package com.mycompany.aimprac;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author jokin
  */
 public class Dot {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(Dot.class);
 
     private double x;
     private double y;
