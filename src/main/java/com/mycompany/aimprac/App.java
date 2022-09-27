@@ -35,14 +35,14 @@ public class App extends Application {
     private int multiDotCount = 2;
     private long addDotDelayMillis = 200;
     private int addDots = 50;
-    private boolean playSounds = true;
+    private int feedbackSoundGainLevel = 4;
 
     @Override
     public void start(Stage stage) {
         BorderPane rootPane = new BorderPane();
         rootPane.setBackground(new Background(new BackgroundFill(Color.rgb(50, 50, 60), CornerRadii.EMPTY, Insets.EMPTY)));
 
-        AimCanvas canvas = new AimCanvas(canvasWidth, canvasHeight, mode, dotRadius, addDots, dotVisibilityMillis, multiDotCount, addDotDelayMillis, playSounds);
+        AimCanvas canvas = new AimCanvas(canvasWidth, canvasHeight, mode, dotRadius, addDots, dotVisibilityMillis, multiDotCount, addDotDelayMillis, feedbackSoundGainLevel*16-80);
         canvas.start();
 
         Button resetButton = new Button("Restart");
@@ -134,6 +134,20 @@ public class App extends Application {
         addDotDelaySlider.valueProperty().addListener((event) -> {
             canvas.setAddDotDelayMillis((long) addDotDelaySlider.getValue());
         });
+        
+        Label feedbackVolumeLabel = new Label("Feedback volume:");
+        feedbackVolumeLabel.setPadding(configMenuItemInsets);
+        feedbackVolumeLabel.setTextFill(Color.WHITE);
+
+        Slider feedbackVolumeSlider = new Slider(0, 5, feedbackSoundGainLevel);
+        feedbackVolumeSlider.setPrefWidth(configMenuItemWidth);
+        feedbackVolumeSlider.setMajorTickUnit(1);
+        feedbackVolumeSlider.setMinorTickCount(0);
+        feedbackVolumeSlider.setShowTickLabels(true);
+        feedbackVolumeSlider.setSnapToTicks(true);
+        feedbackVolumeSlider.valueProperty().addListener((event) -> {
+            canvas.setPlaySounds((int) feedbackVolumeSlider.getValue()*16-80);
+        });
 
         CheckBox customSize = new CheckBox("Custom size");
         customSize.setPadding(configMenuItemInsets);
@@ -169,11 +183,6 @@ public class App extends Application {
         heightSelection.getItems().add("1440");
         heightSelection.setValue(canvasHeight);
         
-        CheckBox playSounds = new CheckBox("Play sounds");
-        playSounds.setPadding(configMenuItemInsets);
-        playSounds.setTextFill(Color.WHITE);
-        playSounds.setSelected(this.playSounds);
-        
         widthSelection.valueProperty().addListener((event) -> {
             initStageSizeFromSelections(stage, canvas, widthSelection, heightSelection);
         });
@@ -193,10 +202,6 @@ public class App extends Application {
         });
         initStageSizeFromSelections(stage, canvas, widthSelection, heightSelection);
         initStageResizeListeners(stage, canvas);
-        
-        playSounds.selectedProperty().addListener((event) -> {
-            canvas.setPlaySounds(playSounds.isSelected());
-        });
 
         VBox configurationMenu = new VBox();
         configurationMenu.setPadding(configMenuInsets);
@@ -214,7 +219,8 @@ public class App extends Application {
                 visibilityTimeSlider,
                 addDotDelayLabel,
                 addDotDelaySlider,
-                playSounds,
+                feedbackVolumeLabel,
+                feedbackVolumeSlider,
                 customSize,
                 widthSelectionLabel,
                 widthSelection,

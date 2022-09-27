@@ -25,6 +25,8 @@ import javafx.scene.text.Font;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.Control;
+import javax.sound.sampled.FloatControl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +48,7 @@ public class AimCanvas {
     private Canvas canvas;
     private GraphicsContext gc;
     private boolean started = false;
-    private boolean playSounds;
+    private int feedbackSoundGain;
     
     
     private Random rand;
@@ -66,7 +68,7 @@ public class AimCanvas {
 
     private AimCanvasTimer timer;
 
-    public AimCanvas(double canvasWidth, double canvasHeight, String mode, double dotRadius, int addDots, long dotVisibilityMillis, int multiDotCount, long addDotDelayMillis, boolean playSounds) {
+    public AimCanvas(double canvasWidth, double canvasHeight, String mode, double dotRadius, int addDots, long dotVisibilityMillis, int multiDotCount, long addDotDelayMillis, int feedbackSoundGain) {
         this.rootPane = new AnchorPane();
         this.mode = mode;
         this.dotRadius = dotRadius;
@@ -74,7 +76,7 @@ public class AimCanvas {
         this.dotVisibilityMillis = dotVisibilityMillis;
         this.multiDotCount = multiDotCount;
         this.addDotDelayMillis = addDotDelayMillis;
-        this.playSounds = playSounds;
+        this.feedbackSoundGain = feedbackSoundGain;
         this.setWidth(canvasWidth);
         this.setHeight(canvasHeight);
     }
@@ -359,8 +361,8 @@ public class AimCanvas {
         this.reset();
     }
 
-    public void setPlaySounds(boolean playSounds) {
-        this.playSounds = playSounds;
+    public void setPlaySounds(int feedbackSoundGain) {
+        this.feedbackSoundGain = feedbackSoundGain;
         this.reset();
     }
 
@@ -402,10 +404,12 @@ public class AimCanvas {
     }
     
     private void playSound(String filename) {
-        if (!this.playSounds) return;
+        if (feedbackSoundGain < -70) return;
         try (InputStream inputStream = new BufferedInputStream(getClass().getResourceAsStream("/sounds/" + filename));  AudioInputStream audioStream = AudioSystem.getAudioInputStream(inputStream)) {
             Clip clip = AudioSystem.getClip();
             clip.open(audioStream);
+            FloatControl volume = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+            volume.setValue(feedbackSoundGain);
             clip.start();
         } catch (Exception e) {
             LOG.error("Cannot play sound!", e);
